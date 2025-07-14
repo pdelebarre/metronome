@@ -292,81 +292,276 @@ input:checked + .slider:before {
   font-size: 1.3rem;
 }
 
-/* Mobile Responsiveness */
+/* Progressive Metronome Settings */
+.progressive-settings {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 10px 10px 8px 10px;
+  margin-bottom: 18px;
+  margin-top: -8px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+}
+
+.progressive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.progressive-row label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 0;
+  display: block;
+  min-width: 90px;
+}
+
+.progressive-input {
+  width: 60px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.progressive-input:focus {
+  border: 1.5px solid #e74c3c;
+  background: rgba(255,255,255,0.13);
+}
+
+.progressive-bar-range-container {
+  flex: 1;
+  margin: 0 8px;
+}
+
+.progressive-bar-labels {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 500;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.progressive-duration-buttons {
+  display: flex;
+  gap: 6px;
+  margin-left: 0;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.duration-btn {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.duration-btn.active,
+.duration-btn:active {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(231,76,60,0.18);
+}
+
+.duration-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.18);
+}
+
+/* Progressive Bar Settings */
+.progressive-bar-single-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.progressive-bar-single {
+  appearance: none;
+  width: 40%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.18);
+  outline: none;
+  transition: background 0.2s;
+}
+
+.progressive-bar-single::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e74c3c;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(231,76,60,0.18);
+  border: none;
+}
+
+.progressive-bar-single::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e74c3c;
+  cursor: pointer;
+  border: none;
+}
+
+/* New Progressive Bar Range Styles */
+.progressive-bar-range-container {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.progressive-bar-range {
+  height: 6px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 3px;
+  margin-bottom: 8px;
+}
+
+.progressive-bar-track {
+  background: #e74c3c;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.progressive-bar-thumb {
+  height: 18px;
+  width: 18px;
+  background: #e74c3c;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(231,76,60,0.18);
+  border: none;
+  top: -6px;
+  position: relative;
+}
+
+/* Responsive for progressive settings */
 @media (max-width: 480px) {
-  .metronome-container {
-    padding: 30px 20px;
-    margin: 10px;
+  .progressive-settings {
+    padding: 12px 6px 6px 6px;
   }
-  
-  .bpm-value {
-    font-size: 3rem;
-  }
-  
-  .time-signature-buttons {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  
-  .time-sig-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .troue-mode-buttons {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  
-  .feature-toggle {
+  .progressive-row {
     flex-direction: column;
-    gap: 10px;
-    text-align: center;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .progressive-duration-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-left: 0;
+  }
+  .progressive-input {
+    width: 100%;
   }
 }
 
-/* Landscape mobile */
-@media (max-height: 600px) and (orientation: landscape) {
-  .metronome-container {
-    padding: 20px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  
-  .bpm-value {
-    font-size: 2.5rem;
-  }
-  
-  .beat-indicators {
-    margin-bottom: 15px;
-  }
-  
-  .time-signature-section {
-    margin-bottom: 15px;
-  }
-  
-  .feature-toggle {
-    margin-bottom: 15px;
-  }
+.timer-section {
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  padding: 18px 12px 14px 12px;
+  margin-bottom: 24px;
+  margin-top: 12px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
 }
 
-/* Ensure proper touch targets */
-@media (hover: none) and (pointer: coarse) {
-  .time-sig-btn,
-  .troue-mode-btn {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .toggle-switch {
-    min-height: 44px;
-    min-width: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .play-button {
-    min-height: 50px;
-  }
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.timer-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+}
+
+.timer-duration-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding-left: 2px;
+}
+
+.timer-duration-buttons .duration-btn {
+  min-width: 64px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  padding: 8px 0;
+  border-radius: 7px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.timer-duration-buttons .duration-btn.active,
+.timer-duration-buttons .duration-btn:active {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(231,76,60,0.18);
+}
+
+.timer-duration-buttons .duration-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timer-card.improved {
+  background: rgba(0,0,0,0.22);
+  border-radius: 12px;
+  padding: 20px 0 12px 0;
+  margin-bottom: 0;
+  margin-top: 0;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+}
+
+.timer-label {
+  color: #fff;
+  font-size: 1.05rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+  font-weight: 400;
+}
+
+.timer-main-value {
+  color: #fff;
+  font-size: 2.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
+.progressive-row-column {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }

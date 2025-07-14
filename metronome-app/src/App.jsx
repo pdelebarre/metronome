@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import ReactSlider from "react-slider";
 import "./App.css";
 
 const METRONOME_MODES = {
-  BEGINNER: "beginner",
-  MEDIUM: "medium",
-  PRO: "pro",
+  BEGINNER: "Débutant",
+  MEDIUM: "Moyen",
+  PRO: "Pro",
 };
 
 const SKIP_PATTERNS = {
@@ -27,6 +28,9 @@ function App() {
   const [isTimer, setIsTimer] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(300); // 5 minutes
   const [originalTimerSeconds] = useState(300);
+  const [progressiveStartBpm, setProgressiveStartBpm] = useState(80);
+  const [progressiveEndBpm, setProgressiveEndBpm] = useState(140);
+  const [progressiveDuration, setProgressiveDuration] = useState(2); // in minutes
 
   const intervalRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -85,10 +89,30 @@ function App() {
     return pattern[patternIndex] === 0;
   }, [isMetronomeTroue, troueMode]);
 
+  // Progressive metronome BPM calculation
+  const progressiveTotalBeats = getBeatsPerMeasure() * (progressiveDuration * 60 * (bpm / 60));
+  const progressiveTotalTicks = progressiveDuration * 60 * (bpm / 60);
+  const progressiveBpmStep =
+    progressiveDuration > 0
+      ? (progressiveEndBpm - progressiveStartBpm) / (progressiveDuration * 60)
+      : 0;
+
   // Metronome tick function
   const tick = useCallback(() => {
     const beatsPerMeasure = getBeatsPerMeasure();
     const isFirstBeat = beatCountRef.current % beatsPerMeasure === 0;
+
+    // Progressive BPM calculation
+    if (isProgressiveMetronome) {
+      const elapsedSeconds = Math.floor(beatCountRef.current * (60 / bpm));
+      let nextBpm = Math.round(
+        Math.min(
+          progressiveStartBpm + progressiveBpmStep * elapsedSeconds,
+          progressiveEndBpm
+        )
+      );
+      if (nextBpm !== bpm) setBpm(nextBpm);
+    }
 
     if (isMetronomeTroue) {
       if (!shouldSkipBeat()) {
@@ -104,7 +128,6 @@ function App() {
     setCurrentBeat(beatCountRef.current % beatsPerMeasure);
     beatCountRef.current++;
 
-    // Timer countdown
     if (isTimer) {
       setTimerSeconds((prev) => {
         if (prev <= 1) {
@@ -114,20 +137,16 @@ function App() {
         return prev - 1;
       });
     }
-
-    // Progressive metronome (increase BPM slightly)
-    if (
-      isProgressiveMetronome &&
-      beatCountRef.current % (beatsPerMeasure * 4) === 0
-    ) {
-      setBpm((prev) => Math.min(prev + 1, 200));
-    }
   }, [
     isMetronomeTroue,
     shouldSkipBeat,
     playSound,
     isTimer,
     isProgressiveMetronome,
+    bpm,
+    progressiveStartBpm,
+    progressiveEndBpm,
+    progressiveBpmStep,
   ]);
 
   // Start/stop metronome
@@ -272,6 +291,51 @@ function App() {
             <span className="slider"></span>
           </label>
         </div>
+        {isProgressiveMetronome && (
+          <div className="progressive-settings">
+            <div className="progressive-row">
+              <label style={{ width: "100%" }}>
+                Progression
+                <div className="progressive-bar-range-container">
+                  <ReactSlider
+                    className="progressive-bar-range"
+                    thumbClassName="progressive-bar-thumb"
+                    trackClassName="progressive-bar-track"
+                    min={40}
+                    max={200}
+                    value={[progressiveStartBpm, progressiveEndBpm]}
+                    minDistance={1}
+                    onChange={([min, max]) => {
+                      setProgressiveStartBpm(min);
+                      setProgressiveEndBpm(max);
+                    }}
+                    pearling
+                    withTracks={true}
+                  />
+                  <div className="progressive-bar-labels">
+                    <span>{progressiveStartBpm}</span>
+                    <span style={{ margin: "0 8px", color: "#aaa" }}>→</span>
+                    <span>{progressiveEndBpm}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div className="progressive-row progressive-row-column">
+              <label>Durée de la progression</label>
+              <div className="progressive-duration-buttons">
+                {[1, 2, 3, 5, 10].map((min) => (
+                  <button
+                    key={min}
+                    className={`duration-btn ${progressiveDuration === min ? "active" : ""}`}
+                    onClick={() => setProgressiveDuration(min)}
+                  >
+                    {min} min
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Metronome Troué */}
         <div className="feature-toggle">
@@ -298,7 +362,7 @@ function App() {
                   }`}
                   onClick={() => setTroueMode(mode)}
                 >
-                  {key.charAt(0) + key.slice(1).toLowerCase()}
+                  {mode.charAt(0) + mode.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -306,24 +370,41 @@ function App() {
         )}
 
         {/* Timer */}
-        <div className="feature-toggle">
-          <span>Chronomètre d'entraînement</span>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={isTimer}
-              onChange={(e) => setIsTimer(e.target.checked)}
-            />
-            <span className="slider"></span>
-          </label>
-        </div>
-
-        {/* Timer Display */}
-        {isTimer && (
-          <div className="timer-display">
-            <span className="timer-value">{formatTime(timerSeconds)}</span>
+        <div className="timer-section">
+          <div className="timer-header">
+            <span className="timer-title">Chronomètre d'entraînement</span>
+            <label className="toggle-switch" aria-label="Activer le chronomètre d'entraînement">
+              <input
+                type="checkbox"
+                checked={isTimer}
+                onChange={(e) => setIsTimer(e.target.checked)}
+              />
+              <span className="slider"></span>
+            </label>
           </div>
-        )}
+          {isTimer && (
+            <>
+              <div className="timer-duration-buttons">
+                {[1, 2, 3, 4, 5, 10].map((min) => (
+                  <button
+                    key={min}
+                    className={`duration-btn ${timerSeconds / 60 === min ? "active" : ""}`}
+                    onClick={() => setTimerSeconds(min * 60)}
+                    type="button"
+                  >
+                    {min} min
+                  </button>
+                ))}
+              </div>
+              <div className="timer-card improved">
+                <div className="timer-label">Temps restant</div>
+                <div className="timer-main-value">
+                  {formatTime(timerSeconds)}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Play/Pause Button */}
         <button className="play-button" onClick={handlePlayPause}>
