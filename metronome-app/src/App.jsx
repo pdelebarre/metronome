@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactSlider from "react-slider";
 import "./App.css";
+import translations from "./locale";
 
 const METRONOME_MODES = {
   BEGINNER: "Débutant",
@@ -17,6 +18,10 @@ const SKIP_PATTERNS = {
   [METRONOME_MODES.PRO]: { frequency: 4, pattern: [1, 1, 1, 0] }, // Skip every 4th beat
 };
 
+function useTranslation(lang) {
+  return (key) => translations[lang][key] || key;
+}
+
 function App() {
   const [bpm, setBpm] = useState(120);
   const [timeSignature, setTimeSignature] = useState("4/4");
@@ -31,6 +36,8 @@ function App() {
   const [progressiveStartBpm, setProgressiveStartBpm] = useState(80);
   const [progressiveEndBpm, setProgressiveEndBpm] = useState(140);
   const [progressiveDuration, setProgressiveDuration] = useState(2); // in minutes
+  const [lang, setLang] = useState("fr");
+  const t = useTranslation(lang);
 
   const intervalRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -227,13 +234,25 @@ function App() {
   return (
     <div className="metronome-app">
       <div className="metronome-container">
+        {/* Language Selector */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+          <select value={lang} onChange={e => setLang(e.target.value)}>
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="es">Español</option>
+            <option value="nl">Nederlands</option>
+          </select>
+        </div>
+
         {/* Beat indicators */}
         <div className="beat-indicators">{renderBeatIndicators()}</div>
 
         {/* BPM Display */}
         <div className="bpm-display">
           <span className="bpm-value">{bpm}</span>
-          <span className="bpm-label">BPM</span>
+          <span className="bpm-label">{t("bpm")}</span>
         </div>
 
         {/* BPM Slider */}
@@ -250,7 +269,7 @@ function App() {
 
         {/* Time Signature */}
         <div className="time-signature-section">
-          <h3>Signature Rythmique</h3>
+          <h3>{t("timeSignature")}</h3>
           <div className="time-signature-buttons">
             {["2/4", "3/4", "4/4", "5/4", "6/4"].map((sig) => (
               <button
@@ -281,7 +300,7 @@ function App() {
 
         {/* Progressive Metronome */}
         <div className="feature-toggle">
-          <span>Métronome Progressif</span>
+          <span>{t("progressiveMetronome")}</span>
           <label className="toggle-switch">
             <input
               type="checkbox"
@@ -295,7 +314,7 @@ function App() {
           <div className="progressive-settings">
             <div className="progressive-row">
               <label style={{ width: "100%" }}>
-                Progression
+                {t("progression")}
                 <div className="progressive-bar-range-container">
                   <ReactSlider
                     className="progressive-bar-range"
@@ -321,7 +340,7 @@ function App() {
               </label>
             </div>
             <div className="progressive-row progressive-row-column">
-              <label>Durée de la progression</label>
+              <label>{t("progressionDuration")}</label>
               <div className="progressive-duration-buttons">
                 {[1, 2, 3, 5, 10].map((min) => (
                   <button
@@ -329,7 +348,7 @@ function App() {
                     className={`duration-btn ${progressiveDuration === min ? "active" : ""}`}
                     onClick={() => setProgressiveDuration(min)}
                   >
-                    {min} min
+                    {min} {t("min")}
                   </button>
                 ))}
               </div>
@@ -339,7 +358,7 @@ function App() {
 
         {/* Metronome Troué */}
         <div className="feature-toggle">
-          <span>Métronome Troué</span>
+          <span>{t("metronomeTroue")}</span>
           <label className="toggle-switch">
             <input
               type="checkbox"
@@ -354,17 +373,24 @@ function App() {
         {isMetronomeTroue && (
           <div className="troue-mode-selection">
             <div className="troue-mode-buttons">
-              {Object.entries(METRONOME_MODES).map(([key, mode]) => (
-                <button
-                  key={mode}
-                  className={`troue-mode-btn ${
-                    troueMode === mode ? "active" : ""
-                  }`}
-                  onClick={() => setTroueMode(mode)}
-                >
-                  {mode.charAt(0) + mode.slice(1).toLowerCase()}
-                </button>
-              ))}
+              <button
+                className={`troue-mode-btn ${troueMode === METRONOME_MODES.BEGINNER ? "active" : ""}`}
+                onClick={() => setTroueMode(METRONOME_MODES.BEGINNER)}
+              >
+                {t("easy")}
+              </button>
+              <button
+                className={`troue-mode-btn ${troueMode === METRONOME_MODES.MEDIUM ? "active" : ""}`}
+                onClick={() => setTroueMode(METRONOME_MODES.MEDIUM)}
+              >
+                {t("medium")}
+              </button>
+              <button
+                className={`troue-mode-btn ${troueMode === METRONOME_MODES.PRO ? "active" : ""}`}
+                onClick={() => setTroueMode(METRONOME_MODES.PRO)}
+              >
+                {t("hard")}
+              </button>
             </div>
           </div>
         )}
@@ -372,8 +398,8 @@ function App() {
         {/* Timer */}
         <div className="timer-section">
           <div className="timer-header">
-            <span className="timer-title">Chronomètre d'entraînement</span>
-            <label className="toggle-switch" aria-label="Activer le chronomètre d'entraînement">
+            <span className="timer-title">{t("trainingTimer")}</span>
+            <label className="toggle-switch" aria-label={t("trainingTimer")}>
               <input
                 type="checkbox"
                 checked={isTimer}
@@ -392,12 +418,12 @@ function App() {
                     onClick={() => setTimerSeconds(min * 60)}
                     type="button"
                   >
-                    {min} min
+                    {min} {t("min")}
                   </button>
                 ))}
               </div>
               <div className="timer-card improved">
-                <div className="timer-label">Temps restant</div>
+                <div className="timer-label">{t("remainingTime")}</div>
                 <div className="timer-main-value">
                   {formatTime(timerSeconds)}
                 </div>
@@ -409,7 +435,7 @@ function App() {
         {/* Play/Pause Button */}
         <button className="play-button" onClick={handlePlayPause}>
           <span className="play-icon">{isPlaying ? "⏸" : "▶"}</span>
-          <span className="play-text">{isPlaying ? "Pause" : "Démarrer"}</span>
+          <span className="play-text">{isPlaying ? t("pause") : t("play")}</span>
         </button>
       </div>
     </div>
