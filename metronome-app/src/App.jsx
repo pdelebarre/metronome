@@ -9,13 +9,29 @@ const METRONOME_MODES = {
   PRO: "Pro",
 };
 
+function getRandomPattern(length, skips) {
+  // Create an array with (length - skips) ones and (skips) zeros, then shuffle
+  const arr = Array(length - skips).fill(1).concat(Array(skips).fill(0));
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 const SKIP_PATTERNS = {
-  [METRONOME_MODES.BEGINNER]: {
+  [METRONOME_MODES.BEGINNER]: () => ({
     frequency: 8,
-    pattern: [1, 1, 1, 1, 1, 1, 1, 0],
-  }, // Skip every 8th beat
-  [METRONOME_MODES.MEDIUM]: { frequency: 6, pattern: [1, 1, 1, 1, 1, 0] }, // Skip every 6th beat
-  [METRONOME_MODES.PRO]: { frequency: 4, pattern: [1, 1, 1, 0] }, // Skip every 4th beat
+    pattern: getRandomPattern(8, 1), // 1 skip in 8 beats
+  }),
+  [METRONOME_MODES.MEDIUM]: () => ({
+    frequency: 6,
+    pattern: getRandomPattern(6, 1), // 1 skip in 6 beats
+  }),
+  [METRONOME_MODES.PRO]: () => ({
+    frequency: 4,
+    pattern: getRandomPattern(4, 1), // 1 skip in 4 beats
+  }),
 };
 
 function useTranslation(lang) {
@@ -43,6 +59,7 @@ function App() {
   const audioContextRef = useRef(null);
   const beatCountRef = useRef(0);
   const troueCountRef = useRef(0);
+  const [currentPattern, setCurrentPattern] = useState(SKIP_PATTERNS[troueMode]().pattern);
 
   // Initialize audio context
   useEffect(() => {
@@ -87,14 +104,21 @@ function App() {
     return parseInt(timeSignature.split("/")[0]);
   };
 
+  // Update current pattern on mode change
+  useEffect(() => {
+    if (isMetronomeTroue) {
+      setCurrentPattern(SKIP_PATTERNS[troueMode]().pattern);
+      troueCountRef.current = 0;
+    }
+  }, [isMetronomeTroue, troueMode]);
+
   // Check if current beat should be skipped (for metronome troué)
   const shouldSkipBeat = useCallback(() => {
     if (!isMetronomeTroue) return false;
-
-    const pattern = SKIP_PATTERNS[troueMode].pattern;
+    const pattern = currentPattern;
     const patternIndex = troueCountRef.current % pattern.length;
     return pattern[patternIndex] === 0;
-  }, [isMetronomeTroue, troueMode]);
+  }, [isMetronomeTroue, currentPattern]);
 
   // Progressive metronome BPM calculation
   const progressiveTotalBeats = getBeatsPerMeasure() * (progressiveDuration * 60 * (bpm / 60));
@@ -108,6 +132,12 @@ function App() {
   const tick = useCallback(() => {
     const beatsPerMeasure = getBeatsPerMeasure();
     const isFirstBeat = beatCountRef.current % beatsPerMeasure === 0;
+
+    // Randomize skip pattern at the start of each measure
+    if (isMetronomeTroue && isFirstBeat) {
+      setCurrentPattern(SKIP_PATTERNS[troueMode]().pattern);
+      troueCountRef.current = 0;
+    }
 
     // Progressive BPM calculation
     if (isProgressiveMetronome) {
@@ -123,12 +153,10 @@ function App() {
 
     if (isMetronomeTroue) {
       if (!shouldSkipBeat()) {
-        // Play sound if not skipped
         playSound(isFirstBeat ? 1000 : 800, 0.1, 0.3);
       }
       troueCountRef.current++;
     } else {
-      // Normal metronome
       playSound(isFirstBeat ? 1000 : 800, 0.1, 0.3);
     }
 
@@ -154,6 +182,7 @@ function App() {
     progressiveStartBpm,
     progressiveEndBpm,
     progressiveBpmStep,
+    troueMode,
   ]);
 
   // Start/stop metronome
@@ -341,16 +370,22 @@ function App() {
             </div>
             <div className="progressive-row progressive-row-column">
               <label>{t("progressionDuration")}</label>
-              <div className="progressive-duration-buttons">
-                {[1, 2, 3, 5, 10].map((min) => (
-                  <button
-                    key={min}
-                    className={`duration-btn ${progressiveDuration === min ? "active" : ""}`}
-                    onClick={() => setProgressiveDuration(min)}
-                  >
-                    {min} {t("min")}
-                  </button>
-                ))}
+              <div className="progressive-slider-container">
+                <ReactSlider
+                  className="progressive-duration-slider"
+                  thumbClassName="progressive-bar-thumb"
+                  trackClassName="progressive-bar-track"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={progressiveDuration}
+                  onChange={setProgressiveDuration}
+                />
+                <div className="progressive-bar-labels">
+                  <span>1</span>
+                  <span>{progressiveDuration} {t("min")}</span>
+                  <span>10</span>
+                </div>
               </div>
             </div>
           </div>
@@ -410,17 +445,22 @@ function App() {
           </div>
           {isTimer && (
             <>
-              <div className="timer-duration-buttons">
-                {[1, 2, 3, 4, 5, 10].map((min) => (
-                  <button
-                    key={min}
-                    className={`duration-btn ${timerSeconds / 60 === min ? "active" : ""}`}
-                    onClick={() => setTimerSeconds(min * 60)}
-                    type="button"
-                  >
-                    {min} {t("min")}
-                  </button>
-                ))}
+              <div className="timer-slider-container">
+                <ReactSlider
+                  className="timer-duration-slider"
+                  thumbClassName="progressive-bar-thumb"
+                  trackClassName="progressive-bar-track"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={timerSeconds / 60}
+                  onChange={min => setTimerSeconds(min * 60)}
+                />
+                <div className="progressive-bar-labels">
+                  <span>1</span>
+                  <span>{timerSeconds / 60} {t("min")}</span>
+                  <span>10</span>
+                </div>
               </div>
               <div className="timer-card improved">
                 <div className="timer-label">{t("remainingTime")}</div>
